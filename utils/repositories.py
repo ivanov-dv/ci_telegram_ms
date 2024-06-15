@@ -1,8 +1,3 @@
-import threading
-
-import config
-
-
 from typing_extensions import Self
 
 from utils.models import *

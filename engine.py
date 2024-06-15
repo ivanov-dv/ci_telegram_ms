@@ -13,6 +13,16 @@ from aiogram import Bot, Dispatcher
 
 from handlers import main_handlers
 from utils.db import PostgresDB
+from utils.middlewares import AuthMiddleware
+from utils.repositories import UserRepository, RequestRepository, SessionRepository
+
+
+'''
+Repositories
+'''
+users_repo = UserRepository(db=None)
+sessions_repo = SessionRepository(db=None)
+requests_repo = RequestRepository(db=None)
 
 
 '''
@@ -48,6 +58,9 @@ Telegram API
 telegram_bot = Bot(token=cfg.TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode=cfg.TELEGRAM_PARSE_MODE))
 logging.basicConfig(level=cfg.LOG_LEVEL, stream=sys.stdout)
 dp = Dispatcher(storage=MemoryStorage())
+outer_middleware = AuthMiddleware(users_repo, sessions_repo)
+dp.message.outer_middleware(outer_middleware)
+dp.callback_query.outer_middleware(outer_middleware)
 dp.include_routers(
     main_handlers.router
     )
