@@ -9,14 +9,14 @@ from datetime import datetime as dt
 class User:
     def __init__(
             self,
-            id_telegram: int,
+            user_id: int,
             name: str,
             surname: str,
             username: str,
             date_registration,
             date_update,
             ban: bool = False):
-        self.id_telegram = id_telegram
+        self.user_id = user_id
         self.name = name
         self.surname = surname
         self.username = username
@@ -25,11 +25,11 @@ class User:
         self.ban = ban
 
     def __repr__(self):
-        return (f"User({self.id_telegram}, {self.name}, {self.surname}, {self.username},"
+        return (f"User({self.user_id}, {self.name}, {self.surname}, {self.username},"
                 f" {self.ban}, {self.date_registration}, {self.date_update})")
 
     def __str__(self):
-        return (f"User id: {self.id_telegram}\n"
+        return (f"User id: {self.user_id}\n"
                 f"Name: {self.name}\n"
                 f"Surname: {self.surname}\n"
                 f"Username: {self.username}\n"
@@ -39,14 +39,14 @@ class User:
 
     def __eq__(self, other):
         if isinstance(other, User):
-            return self.id_telegram == other.id_telegram
+            return self.user_id == other.user_id
         return False
 
     def __ne__(self, other):
         return not self == other
 
     def __hash__(self):
-        return hash(self.id_telegram)
+        return hash(self.user_id)
 
 
 class Session:

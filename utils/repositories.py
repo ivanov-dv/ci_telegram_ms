@@ -1,4 +1,3 @@
-import binance
 import threading
 
 import config
@@ -10,20 +9,39 @@ from utils.models import *
 from utils.patterns import PatternSingleton, RepositoryDB
 
 
+class UserRepository(RepositoryDB, PatternSingleton):
+    users: dict[int, User] = {}
+
+    def add(self, user: User) -> None:
+        self.users[user.user_id] = user
+
+    def delete(self, user: User) -> None:
+        if self.users.get(user.user_id, None):
+            self.users.pop(user.user_id)
+
+    def get(self, user_id: int) -> User:
+        return self.users.get(user_id, None)
+
+    def update(self, user: User) -> None:
+        if self.users.get(user.user_id, None):
+            self.users[user.user_id] = user
+
+
 class SessionRepository(RepositoryDB, PatternSingleton):
-    sessions = {}
+    sessions: dict[int, Session] = {}
 
-    def _add(self, session: Session):
-        pass
+    def add(self, session: Session) -> None:
+        self.sessions[session.user_id] = session
 
-    def _delete(self, session: Session):
-        pass
+    def delete(self, user_id: int) -> None:
+        if self.sessions.get(user_id, None):
+            self.sessions.pop(user_id)
 
-    def get(self, session: Session):
-        pass
+    def get(self, user_id) -> Session:
+        return self.sessions.get(user_id, None)
 
-    def update(self, session: Session):
-        pass
+    def update(self, user_id) -> None:
+        self.sessions[user_id].time_update = time.time()
 
 
 class RequestRepository(RepositoryDB, PatternSingleton):
@@ -87,74 +105,3 @@ class RequestRepository(RepositoryDB, PatternSingleton):
         self.unique_requests_for_server = set(map(RequestForServer, self.unique_user_requests.keys()))
 
         return self.unique_requests_for_server
-
-
-class ResponseRepository(RepositoryDB, PatternSingleton):
-
-    def __init__(self, db, client: binance.Client):
-        super().__init__(db)
-        self.client = client
-        self.response = None
-
-    def _get_response_price_or_percent_of_point(self, request: RequestForServer) -> None:
-        for _ in range(config.TRY_GET_RESPONSE):
-            try:
-                response = self.client.get_klines(
-                    symbol=request.symbol,
-                    interval=config.INTERVAL_FOR_PRICE_REQUEST,
-                    limit=config.LIMIT_FOR_PRICE_REQUEST
-                )
-                list_response = [ResponseKline(*map(float, i[:11])) for i in response]
-                self.response[TypeRequest.price].update({request.symbol: list_response})
-                break
-            except Exception as e:
-                time.sleep(config.TIMEOUT_BETWEEN_RESPONSE)
-                str(e)
-                continue
-
-    def _get_response_percent_of_time(self, request: RequestForServer) -> None:
-        for _ in range(config.TRY_GET_RESPONSE):
-            try:
-                response = self.client.get_ticker(symbol=request.symbol)
-                if not (request.symbol in response):
-                    self.response[TypeRequest.period].update({request.symbol: {}})
-                self.response[TypeRequest.period][request.symbol].update(
-                    {request.data_request.period: ResponseGetTicker(response)}
-                )
-                break
-            except Exception as e:
-                time.sleep(config.TIMEOUT_BETWEEN_RESPONSE)
-                str(e)
-                continue
-
-    def get_response_from_server(
-            self,
-            requests: set[RequestForServer]
-    ) -> dict[TypeRequest, {str, list[ResponseKline]} | {str, dict[Period, ResponseGetTicker]}]:
-        """
-        Получает ответы от сервера по множеству запросов в многопоточном режиме.
-
-        Args:
-            requests: Перечень уникальных запросов на сервер в виде множества set.
-
-        Returns: Ответ сервера в Dict
-        """
-
-        tasks = []
-        self.response = {TypeRequest.price: {}, TypeRequest.period: {}}
-
-        for request in requests:
-            if isinstance(request.data_request, (Price, PercentOfPoint)):
-                t = threading.Thread(target=self._get_response_price_or_percent_of_point, args=(request,))
-                tasks.append(t)
-            if isinstance(request.data_request, PercentOfTime) and request.data_request.period == Period.v_24h:
-                t = threading.Thread(target=self._get_response_percent_of_time, args=(request,))
-                tasks.append(t)
-
-        for task in tasks:
-            task.start()
-            time.sleep(config.THREAD_INTERVAL_BETWEEN_RESPONSE)
-        for task in tasks:
-            task.join()
-
-        return self.response
