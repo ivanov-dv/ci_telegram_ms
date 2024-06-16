@@ -22,3 +22,28 @@ class KB:
         builder = InlineKeyboardBuilder()
         builder.add(cls.b_back_to_main)
         return builder.as_markup()
+
+
+class CreateNoticeKB(KB):
+    b_price_up = InlineKeyboardButton(
+        text='Повышение цены до', callback_data='cn_price_up')
+    b_price_down = InlineKeyboardButton(
+        text='Снижение цены до', callback_data='cn_price_down')
+    b_period_24h = InlineKeyboardButton(
+        text='Изменение в % за 24ч', callback_data='cn_period_24h')
+    b_period_current_price = InlineKeyboardButton(
+        text='Изменение в % от текущей цены', callback_data='cn_period_current_price')
+    b_period_point = InlineKeyboardButton(
+        text='Изменение в % от указанной цены', callback_data='cn_period_point')
+
+    @classmethod
+    def type_notice(cls):
+        builder = InlineKeyboardBuilder()
+        builder.add(
+            cls.b_price_up,
+            cls.b_price_down,
+            cls.b_period_24h,
+            cls.b_period_current_price,
+            cls.b_period_point,
+            cls.b_back_to_main)
+        return builder.adjust(1).as_markup()
