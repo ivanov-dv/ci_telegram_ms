@@ -2,10 +2,11 @@ from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
+from engine import requests_repo
 from utils.assist import get_msg_from_state
 from utils.fsm_states import *
 from utils.keyboards import *
-
+from utils.models import UserRequest, Symbol, Price, Way, PercentOfPoint
 
 router = Router()
 
@@ -103,7 +104,10 @@ async def cn_get_price(message: types.Message, state: FSMContext):
     data = await state.get_data()
     msg = await get_msg_from_state(state)
     if data['type_notice'] == 'price_up':
-        # создание запроса
+        requests_repo.add(
+            msg.from_user.id,
+            UserRequest(Symbol(data['ticker_name']), Price(float(message.text)), Way.up_to)
+        )
         await msg.edit_text(
             f'Создано уведомление\n\n'
             f'Уведомлять при\n'
@@ -112,7 +116,10 @@ async def cn_get_price(message: types.Message, state: FSMContext):
             f'до {message.text}',
             reply_markup=KB.back_to_main())
     if data['type_notice'] == 'price_down':
-        # создание запроса
+        requests_repo.add(
+            msg.from_user.id,
+            UserRequest(Symbol(data['ticker_name']), Price(float(message.text)), Way.down_to)
+        )
         await msg.edit_text(
             f'Создано уведомление\n\n'
             f'Уведомлять при\n'
@@ -131,4 +138,10 @@ async def cn_get_price(message: types.Message, state: FSMContext):
 
 @router.message(CreateNotice.get_period_point_percent)
 async def cn_get_period_point_percent(message: types.Message, state: FSMContext):
-    pass
+    await message.delete()
+    data = await state.get_data()
+    msg = await get_msg_from_state(state)
+    requests_repo.add(
+        msg.from_user.id,
+        UserRequest(Symbol(data['ticker_name']), PercentOfPoint(float(message.text),), Way.all)
+    )
