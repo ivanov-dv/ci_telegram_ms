@@ -103,6 +103,7 @@ async def cn_get_price(message: types.Message, state: FSMContext):
     data = await state.get_data()
     msg = await get_msg_from_state(state)
     if data['type_notice'] == 'price_up':
+        # создание запроса
         await msg.edit_text(
             f'Создано уведомление\n\n'
             f'Уведомлять при\n'
@@ -111,6 +112,7 @@ async def cn_get_price(message: types.Message, state: FSMContext):
             f'до {message.text}',
             reply_markup=KB.back_to_main())
     if data['type_notice'] == 'price_down':
+        # создание запроса
         await msg.edit_text(
             f'Создано уведомление\n\n'
             f'Уведомлять при\n'
@@ -125,3 +127,8 @@ async def cn_get_price(message: types.Message, state: FSMContext):
         )
         await state.update_data({'msg': msg})
         await state.set_state(CreateNotice.get_period_point_percent)
+
+
+@router.message(CreateNotice.get_period_point_percent)
+async def cn_get_period_point_percent(message: types.Message, state: FSMContext):
+    pass
