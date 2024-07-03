@@ -2,90 +2,17 @@ import datetime
 import enum
 import time
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime as dt
 
-
-class User:
-    def __init__(
-            self,
-            user_id: int,
-            name: str,
-            surname: str,
-            username: str,
-            date_registration,
-            date_update,
-            ban: bool = False):
-        self.user_id = user_id
-        self.name = name
-        self.surname = surname
-        self.username = username
-        self.date_registration = date_registration
-        self.date_update = date_update
-        self.ban = ban
-
-    def __repr__(self):
-        return (f"User({self.user_id}, {self.name}, {self.surname}, {self.username},"
-                f" {self.ban}, {self.date_registration}, {self.date_update})")
-
-    def __str__(self):
-        return (f"User id: {self.user_id}\n"
-                f"Name: {self.name}\n"
-                f"Surname: {self.surname}\n"
-                f"Username: {self.username}\n"
-                f"Ban: {self.ban}\n"
-                f"Date registration: {self.date_registration}\n"
-                f"Date update: {self.date_update})")
-
-    def __eq__(self, other):
-        if isinstance(other, User):
-            return self.user_id == other.user_id
-        return False
-
-    def __ne__(self, other):
-        return not self == other
-
-    def __hash__(self):
-        return hash(self.user_id)
-
-
-class Session:
-    def __init__(self, user_id):
-        self.user_id = user_id
-        self.time_update = time.time()
-
-
-class Symbol:
-    def __init__(self, symbol: str):
-        self.symbol = symbol.upper()
-
-    def __str__(self):
-        return self.symbol
-
-    def __repr__(self):
-        return self.symbol
-
-    def __eq__(self, other):
-        if isinstance(other, Symbol):
-            return self.symbol == other.symbol
-        if isinstance(other, str):
-            return self.symbol == other
-
-    def __ne__(self, other):
-        if isinstance(other, Symbol):
-            return self.symbol != other.symbol
-        if isinstance(other, str):
-            return self.symbol != other
-
-    def __hash__(self):
-        return hash(self.symbol)
+import config
 
 
 class Period(enum.Enum):
-    v_4h = '4 hours ago'
-    v_8h = '8 hours ago'
-    v_12h = '12 hours ago'
-    v_24h = '1 day ago'
+    v_4h = '4h'
+    v_8h = '8h'
+    v_12h = '12h'
+    v_24h = '24h'
 
 
 class TypeRequest(enum.Enum):
@@ -108,55 +35,122 @@ class Percent:
 class PercentOfPoint(Percent):
     current_price: float
 
+    def to_dict(self):
+        return {'type': 'percent_of_point', 'target_percent': self.target_percent, 'current_price': self.current_price}
+
 
 @dataclass(frozen=True)
 class PercentOfTime(Percent):
     period: Period
+
+    def to_dict(self):
+        return {'type': 'percent_of_time', 'target_percent': self.target_percent, 'period': self.period.value}
 
 
 @dataclass(frozen=True)
 class Price:
     target_price: float
 
+    def to_dict(self):
+        return {'type': 'price', 'target_price': self.target_price}
 
+
+@dataclass
 class TimeInfo:
-    def __init__(self):
-        self.create_time: datetime.datetime = dt.utcnow()
-        self.update_time: datetime.datetime = self.create_time
-        self.create_time_unix: float = time.time()
-        self.update_time_unix: float = self.create_time_unix
+    create_time: datetime.datetime = field(default_factory=datetime.datetime.utcnow)
+    update_time: datetime.datetime = None
+    create_time_unix: float = field(default_factory=time.time)
+    update_time_unix: float = None
+
+    def __post_init__(self):
+        self.update_time = self.create_time
+        self.update_time_unix = self.create_time_unix
 
 
+@dataclass(repr=False, eq=False, order=False)
+class Symbol:
+    symbol: str
+
+    def __post_init__(self):
+        self.symbol = self.symbol.upper()
+
+    def __repr__(self):
+        return self.symbol
+
+    def __eq__(self, other):
+        if isinstance(other, Symbol):
+            return self.symbol == other.symbol
+        if isinstance(other, str):
+            return self.symbol == other
+
+    def __ne__(self, other):
+        if isinstance(other, Symbol):
+            return self.symbol != other.symbol
+        if isinstance(other, str):
+            return self.symbol != other
+
+    def __hash__(self):
+        return hash(self.symbol)
+
+
+@dataclass(order=False, eq=False)
+class User:
+    user_id: int
+    firstname: str
+    surname: str
+    username: str
+    date_registration: datetime.datetime = dt.utcnow()
+    date_update: datetime.datetime = dt.utcnow()
+    ban: bool = False
+
+    def __eq__(self, other):
+        if isinstance(other, User):
+            return self.user_id == other.user_id
+        return False
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __hash__(self):
+        return hash(self.user_id)
+
+    def to_dict(self):
+        return {
+            'user_id': self.user_id,
+            'firstname': self.firstname,
+            'surname': self.surname,
+            'username': self.username,
+            'date_registration': repr(self.date_registration),
+            'date_update': repr(self.date_update),
+            'ban': self.ban
+        }
+
+
+@dataclass
+class Session:
+    user_id: int
+    time_update: float = field(default_factory=time.time)
+
+
+@dataclass
 class BaseRequest:
-
-    def __init__(self):
-        self.symbol = None
-        self.data_request = None
-        self.way = None
-        self.time_info = TimeInfo()
+    request_id: int = field(
+        default_factory=lambda: int(time.time() * 10**9),
+        init=False
+    )
 
 
+@dataclass(eq=False, order=False)
 class UserRequest(BaseRequest):
     """
     Класс запросов пользователя.
     Сравнение экземпляров позволяет выявить дубли (время создания и обновления не учитывается).
     """
 
-    def __init__(
-            self,
-            symbol: Symbol,
-            data_request: PercentOfTime | PercentOfPoint | Price,
-            way: Way):
-        super().__init__()
-        self.symbol = symbol
-        self.way = way
-        self.data_request = data_request
-
-    def __str__(self):
-        return f"UserRequest({self.symbol}, {self.data_request}, {self.way})"
-
-    def __repr__(self):
-        return f"UserRequest({self.symbol}, {self.data_request}, {self.way})"
+    symbol: Symbol
+    data_request: PercentOfTime | PercentOfPoint | Price
+    way: Way
+    time_info: TimeInfo = field(default_factory=TimeInfo, init=False)
 
     def __eq__(self, other):
         if isinstance(other, UserRequest):
@@ -169,96 +163,10 @@ class UserRequest(BaseRequest):
     def __hash__(self):
         return hash((self.symbol, self.data_request, self.way))
 
-
-class RequestForServer(BaseRequest):
-    """
-    В данном классе реализовано сравнение экземпляров запросов,
-    которые позволяет сформировать уникальные запросы, поместив их в set().
-    """
-
-    def __init__(self, user_request: UserRequest):
-        super().__init__()
-        self.symbol = user_request.symbol
-        self.data_request = user_request.data_request
-
-    def __str__(self):
-        return f"RequestForServer({self.symbol}, {self.data_request})"
-
-    def __repr__(self):
-        return f"RequestForServer({self.symbol}, {self.data_request})"
-
-    def __eq__(self, other):
-        if isinstance(other, RequestForServer):
-            if isinstance(self.data_request, PercentOfTime) and isinstance(other.data_request, PercentOfTime):
-                return (self.symbol, self.data_request.period) == (other.symbol, other.data_request.period)
-            if (isinstance(self.data_request, (Price, PercentOfPoint)) and
-                    isinstance(other.data_request, (Price, PercentOfPoint))):
-                return self.symbol == other.symbol
-            return (self.symbol, self.data_request) == (other.symbol, other.data_request)
-        return False
-
-    def __ne__(self, other):
-        return not self == other
-
-    def __hash__(self):
-        # if isinstance(self.data_request, PercentOfTime):
-        #     return hash((self.symbol, self.data_request.period))
-        return hash(self.symbol)
-
-
-class BaseResponse:
-    pass
-
-
-class ResponseKline(BaseResponse):
-    def __init__(
-            self,
-            open_time,
-            open_price,
-            high_price,
-            low_price,
-            close_price,
-            volume,
-            close_time,
-            quote_asset_volume,
-            number_of_trades,
-            taker_buy_base_asset_volume,
-            taker_buy_quote_asset_volume
-    ):
-        """
-        Первые 11 элементов списка из ответа сервера по запросу client.get_klines
-        """
-
-        self.open_time = open_time
-        self.open_price = open_price
-        self.high_price = high_price
-        self.low_price = low_price
-        self.close_price = close_price
-        self.volume = volume
-        self.close_time = close_time
-        self.quote_asset_volume = quote_asset_volume
-        self.number_of_trades = number_of_trades
-        self.taker_buy_base_asset_volume = taker_buy_base_asset_volume
-        self.taker_buy_quote_asset_volume = taker_buy_quote_asset_volume
-
-
-class ResponseGetTicker(BaseResponse):
-    def __init__(self, data_dict: dict):
-        """
-        Ответ сервера по запросу client.get_ticker
-        """
-
-        self.symbol = data_dict['symbol']
-        self.price_change = float(data_dict['priceChange'])
-        self.price_change_percent = float(data_dict['priceChangePercent'])
-        self.weighted_avg_price = float(data_dict['weightedAvgPrice'])
-        self.prev_close_price = float(data_dict['prevClosePrice'])
-        self.last_price = float(data_dict['lastPrice'])
-        self.bid_price = float(data_dict['bidPrice'])
-        self.ask_price = float(data_dict['askPrice'])
-        self.open_price = float(data_dict['openPrice'])
-        self.high_price = float(data_dict['highPrice'])
-        self.low_price = float(data_dict['lowPrice'])
-        self.volume = float(data_dict['volume'])
-        self.open_time = float(data_dict['openTime'])
-        self.close_time = float(data_dict['closeTime'])
+    def to_dict(self):
+        return {
+            'id': self.request_id,
+            'symbol': self.symbol.symbol,
+            'way': self.way.value,
+            'data_request': self.data_request.to_dict()
+        }
