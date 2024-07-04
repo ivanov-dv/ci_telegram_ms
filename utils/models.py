@@ -5,6 +5,8 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime as dt
 
+from pydantic import BaseModel
+
 import config
 
 
@@ -93,8 +95,7 @@ class Symbol:
         return hash(self.symbol)
 
 
-@dataclass(order=False, eq=False)
-class User:
+class User(BaseModel):
     user_id: int
     firstname: str
     surname: str
@@ -114,16 +115,29 @@ class User:
     def __hash__(self):
         return hash(self.user_id)
 
-    def to_dict(self):
-        return {
-            'user_id': self.user_id,
-            'firstname': self.firstname,
-            'surname': self.surname,
-            'username': self.username,
-            'date_registration': repr(self.date_registration),
-            'date_update': repr(self.date_update),
-            'ban': self.ban
-        }
+# @dataclass
+# class User:
+#     user_id: int
+#     firstname: str
+#     surname: str
+#     username: str
+#     date_registration: datetime.datetime = dt.utcnow()
+#     date_update: datetime.datetime = dt.utcnow()
+#     ban: bool = False
+#
+#     def to_dict(self):
+#         return {
+#             'user_id': self.user_id,
+#             'firstname': self.firstname,
+#             'surname': self.surname,
+#             'username': self.username,
+#             'date_registration': repr(self.date_registration),
+#             'date_update': repr(self.date_update),
+#             'ban': self.ban
+#         }
+#
+#     def from_dict(self, data):
+#         pass
 
 
 @dataclass

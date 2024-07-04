@@ -39,18 +39,11 @@ class AuthMiddleware(BaseMiddleware):
         data: Dict[str, Any]
     ) -> Any:
         if event.from_user.id in self.users_repo.users:
-            if self.users_repo.get(event.from_user.id).ban:
+            if event.from_user.id in self.users_repo.banned_users:
                 return await event.answer("Ваш аккаунт заблокирован. Обратитесь в поддержку.")
         else:
             self.users_repo.add(
-                User(
-                    event.from_user.id,
-                    event.from_user.first_name,
-                    event.from_user.last_name,
-                    event.from_user.username,
-                    dt.utcnow(),
-                    dt.utcnow(),
-                )
+                event.from_user.id
             )
         check_session = self.session_middleware(event.from_user.id)
         if not check_session:

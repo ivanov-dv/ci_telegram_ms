@@ -2,11 +2,11 @@ from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-from engine import requests_repo
+import utils.texts as t
 from utils.assist import get_msg_from_state
 from utils.fsm_states import *
 from utils.keyboards import *
-from utils.models import UserRequest, Symbol, Price, Way, PercentOfPoint
+
 
 router = Router()
 
@@ -14,33 +14,32 @@ router = Router()
 @router.message(Command('start'))
 async def start(message: types.Message, state: FSMContext):
     await state.clear()
-    await message.answer('<b><u>Привет!</u></b>', reply_markup=KB.main())
+    await message.answer(t.start(message.from_user.first_name), reply_markup=KB.main())
 
 
 @router.callback_query(F.data == 'start')
 async def start_callback(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
-    await callback.message.edit_text('<b><u>Привет!</u></b>', reply_markup=KB.main())
+    await callback.message.edit_text(t.start(callback.from_user.first_name), reply_markup=KB.main())
 
 
 @router.callback_query(F.data == 'create_notice')
 async def cn_ask_ticker_name(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(CreateNotice.get_ticker_name)
-    msg = await callback.message.edit_text(
-        '<b><u>Введите название тикера</u></b>',
-        reply_markup=CreateNoticeKB.back_to_main())
+    msg = await callback.message.edit_text(t.ask_ticker(), reply_markup=CreateNoticeKB.back_to_main())
     await state.update_data({'msg': msg})
 
 
 @router.message(CreateNotice.get_ticker_name)
 async def cn_ask_type_notice(message: types.Message, state: FSMContext):
-    await state.update_data({'ticker_name': message.text})
     await message.delete()
     msg = await get_msg_from_state(state)
-    await msg.edit_text(
-        '<b><u>Выберите тип уведомления</u></b>',
-        reply_markup=CreateNoticeKB.type_notice())
-    await state.set_state(CreateNotice.set_type_notice)
+    if msg:
+        await state.update_data({'ticker_name': message.text})
+        await msg.edit_text(t.ask_type_notice(message.text), reply_markup=CreateNoticeKB.type_notice())
+        await state.set_state(CreateNotice.set_type_notice)
+    else:
+        await msg.edit_text('Такой пары не существует. Попробуйте заново.', reply_markup=CreateNoticeKB.back_to_main())
 
 
 @router.callback_query(F.data == 'cn_price_up')
@@ -104,10 +103,7 @@ async def cn_get_price(message: types.Message, state: FSMContext):
     data = await state.get_data()
     msg = await get_msg_from_state(state)
     if data['type_notice'] == 'price_up':
-        requests_repo.add(
-            msg.from_user.id,
-            UserRequest(Symbol(data['ticker_name']), Price(float(message.text)), Way.up_to)
-        )
+        # Создание запроса
         await msg.edit_text(
             f'Создано уведомление\n\n'
             f'Уведомлять при\n'
@@ -116,10 +112,7 @@ async def cn_get_price(message: types.Message, state: FSMContext):
             f'до {message.text}',
             reply_markup=KB.back_to_main())
     if data['type_notice'] == 'price_down':
-        requests_repo.add(
-            msg.from_user.id,
-            UserRequest(Symbol(data['ticker_name']), Price(float(message.text)), Way.down_to)
-        )
+        # Создание запроса
         await msg.edit_text(
             f'Создано уведомление\n\n'
             f'Уведомлять при\n'
@@ -141,7 +134,4 @@ async def cn_get_period_point_percent(message: types.Message, state: FSMContext)
     await message.delete()
     data = await state.get_data()
     msg = await get_msg_from_state(state)
-    requests_repo.add(
-        msg.from_user.id,
-        UserRequest(Symbol(data['ticker_name']), PercentOfPoint(float(message.text),), Way.all)
-    )
+    # Создание запроса

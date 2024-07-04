@@ -1,10 +1,27 @@
 from typing_extensions import Self
 
 from utils.models import *
-from utils.patterns import PatternSingleton, RepositoryDB
+from utils.patterns import PatternSingleton
 
 
-class SessionRepository(RepositoryDB, PatternSingleton):
+class UserRepository(PatternSingleton):
+    users: set[int] = set()
+    banned_users: set[int] = set()
+
+    def add(self, user_id):
+        self.users.add(user_id)
+
+    def delete(self, user_id):
+        self.users.discard(user_id)
+
+    def get(self, user_id):
+        pass
+
+    def update(self, user_id):
+        pass
+
+
+class SessionRepository(PatternSingleton):
     sessions: dict[int, Session] = {}
 
     def add(self, session: Session) -> None:

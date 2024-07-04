@@ -14,7 +14,7 @@ from aiogram import Bot, Dispatcher
 from handlers import main_handlers
 from utils.db import PostgresDB
 from utils.middlewares import AuthMiddleware
-from utils.repositories import UserRepository, RequestRepository, SessionRepository
+from utils.repositories import UserRepository, SessionRepository
 
 
 '''
@@ -22,7 +22,6 @@ Repositories
 '''
 users_repo = UserRepository(db=None)
 sessions_repo = SessionRepository(db=None)
-requests_repo = RequestRepository(db=None)
 
 
 '''
