@@ -1,98 +1,23 @@
-import datetime
 import enum
 import time
 
 from dataclasses import dataclass, field
-from datetime import datetime as dt
+from datetime import datetime
 
-from pydantic import BaseModel
-
-import config
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Period(enum.Enum):
-    v_4h = '4h'
-    v_8h = '8h'
-    v_12h = '12h'
-    v_24h = '24h'
-
-
-class TypeRequest(enum.Enum):
-    period = 'period'
-    price = 'price'
+    v_4h = "4h"
+    v_8h = "8h"
+    v_12h = "12h"
+    v_24h = "24h"
 
 
 class Way(enum.Enum):
-    up_to = 'up_to'
-    down_to = 'down_to'
-    all = 'all'
-
-
-@dataclass(frozen=True)
-class Percent:
-    target_percent: float
-
-
-@dataclass(frozen=True)
-class PercentOfPoint(Percent):
-    current_price: float
-
-    def to_dict(self):
-        return {'type': 'percent_of_point', 'target_percent': self.target_percent, 'current_price': self.current_price}
-
-
-@dataclass(frozen=True)
-class PercentOfTime(Percent):
-    period: Period
-
-    def to_dict(self):
-        return {'type': 'percent_of_time', 'target_percent': self.target_percent, 'period': self.period.value}
-
-
-@dataclass(frozen=True)
-class Price:
-    target_price: float
-
-    def to_dict(self):
-        return {'type': 'price', 'target_price': self.target_price}
-
-
-@dataclass
-class TimeInfo:
-    create_time: datetime.datetime = field(default_factory=datetime.datetime.utcnow)
-    update_time: datetime.datetime = None
-    create_time_unix: float = field(default_factory=time.time)
-    update_time_unix: float = None
-
-    def __post_init__(self):
-        self.update_time = self.create_time
-        self.update_time_unix = self.create_time_unix
-
-
-@dataclass(repr=False, eq=False, order=False)
-class Symbol:
-    symbol: str
-
-    def __post_init__(self):
-        self.symbol = self.symbol.upper()
-
-    def __repr__(self):
-        return self.symbol
-
-    def __eq__(self, other):
-        if isinstance(other, Symbol):
-            return self.symbol == other.symbol
-        if isinstance(other, str):
-            return self.symbol == other
-
-    def __ne__(self, other):
-        if isinstance(other, Symbol):
-            return self.symbol != other.symbol
-        if isinstance(other, str):
-            return self.symbol != other
-
-    def __hash__(self):
-        return hash(self.symbol)
+    up_to = "up_to"
+    down_to = "down_to"
+    all = "all"
 
 
 class User(BaseModel):
@@ -100,9 +25,12 @@ class User(BaseModel):
     firstname: str
     surname: str
     username: str
-    date_registration: datetime.datetime = dt.utcnow()
-    date_update: datetime.datetime = dt.utcnow()
+    created: datetime
+    updated: datetime | None = None
     ban: bool = False
+
+    class Config:
+        from_attributes = True
 
     def __eq__(self, other):
         if isinstance(other, User):
@@ -115,72 +43,138 @@ class User(BaseModel):
     def __hash__(self):
         return hash(self.user_id)
 
-# @dataclass
-# class User:
-#     user_id: int
-#     firstname: str
-#     surname: str
-#     username: str
-#     date_registration: datetime.datetime = dt.utcnow()
-#     date_update: datetime.datetime = dt.utcnow()
-#     ban: bool = False
-#
-#     def to_dict(self):
-#         return {
-#             'user_id': self.user_id,
-#             'firstname': self.firstname,
-#             'surname': self.surname,
-#             'username': self.username,
-#             'date_registration': repr(self.date_registration),
-#             'date_update': repr(self.date_update),
-#             'ban': self.ban
-#         }
-#
-#     def from_dict(self, data):
-#         pass
+    def __repr__(self):
+        return (
+            f'User(user_id={self.user_id}, firstname="{self.firstname}", surname="{self.surname}", '
+            f'username="{self.username}", ban={self.ban}, created={self.created}, updated={self.updated})'
+        )
+
+    def __str__(self):
+        return self.__repr__()
+
+    @staticmethod
+    def create(user_id, firstname, surname, username):
+        dt = datetime.utcnow()
+        return User(
+            user_id=user_id,
+            firstname=firstname,
+            surname=surname,
+            username=username,
+            created=dt,
+            updated=dt,
+            ban=False,
+        )
 
 
-@dataclass
-class Session:
-    user_id: int
-    time_update: float = field(default_factory=time.time)
+class PercentOfPoint(BaseModel):
+    target_percent: float
+    current_price: float
+    type_request: str = "percent_of_point"
+
+    model_config = ConfigDict(frozen=True)
+
+    def __repr__(self):
+        return (
+            f"PercentOfPoint(target_percent={self.target_percent}, current_price={self.current_price}, "
+            f'weight={self.weight}, type_request="{self.type_request}")'
+        )
+
+    def __str__(self):
+        return self.__repr__()
 
 
-@dataclass
-class BaseRequest:
-    request_id: int = field(
-        default_factory=lambda: int(time.time() * 10**9),
-        init=False
-    )
+class PercentOfTime(BaseModel):
+    target_percent: float
+    period: Period
+    type_request: str = "percent_of_time"
+
+    model_config = ConfigDict(frozen=True)
+
+    def __repr__(self):
+        return (
+            f"PercentOfTime(target_percent={self.target_percent}, period={self.period}, "
+            f'weight={self.weight}, type_request="{self.type_request}")'
+        )
+
+    def __str__(self):
+        return self.__repr__()
 
 
-@dataclass(eq=False, order=False)
-class UserRequest(BaseRequest):
+class Price(BaseModel):
+    target_price: float
+    type_request: str = "price"
+
+    model_config = ConfigDict(frozen=True)
+
+    def __repr__(self):
+        return f'Price(target_price={self.target_price}, weight={self.weight}, type_request="{self.type_request}")'
+
+    def __str__(self):
+        return self.__repr__()
+
+
+class UserRequest(BaseModel):
     """
     Класс запросов пользователя.
     Сравнение экземпляров позволяет выявить дубли (время создания и обновления не учитывается).
     """
 
-    symbol: Symbol
-    data_request: PercentOfTime | PercentOfPoint | Price
+    request_id: int = Field(default_factory=lambda: int(time.time() * 10 ** 9))
+    symbol: str
+    request_data: PercentOfTime | PercentOfPoint | Price
     way: Way
-    time_info: TimeInfo = field(default_factory=TimeInfo, init=False)
+    created: datetime
+    updated: datetime
+
+    class Config:
+        from_attributes = True
+
+    def model_post_init(self, __context):
+        self.symbol = self.symbol.upper()
 
     def __eq__(self, other):
         if isinstance(other, UserRequest):
-            return (self.symbol, self.data_request, self.way) == (other.symbol, other.data_request, other.way)
+            return (self.symbol, self.request_data, self.way) == (
+                other.symbol,
+                other.request_data,
+                other.way,
+            )
         return False
 
     def __ne__(self, other):
         return not self == other
 
     def __hash__(self):
-        return hash((self.symbol, self.data_request, self.way))
+        return hash((self.symbol, self.request_data, self.way))
 
-    def to_dict(self):
-        return {
-            'id': self.request_id,
-            'symbol': self.symbol.symbol,
-            'way': self.way.value,
-            'data_request': self.data_request.to_dict()
-        }
+    def __repr__(self):
+        return (
+            f"UserRequest(request_id={self.request_id}, symbol='{self.symbol}', "
+            f"request_data={self.request_data}, way={self.way}, created={self.created}, updated={self.updated})"
+        )
+
+    def __str__(self):
+        return self.__repr__()
+
+    @staticmethod
+    def create(
+            symbol: str, request_data: PercentOfTime | PercentOfPoint | Price, way: Way
+    ):
+        dt = datetime.utcnow()
+        return UserRequest(
+            symbol=symbol, request_data=request_data, way=way, created=dt, updated=dt
+        )
+
+
+class UserRequestSchema(BaseModel):
+    symbol: str
+    request_data: PercentOfTime | PercentOfPoint | Price
+    way: Way
+    created: datetime
+    updated: datetime
+
+
+@dataclass
+class Session:
+    user_id: int
+    time_update: float = field(default_factory=time.time)
