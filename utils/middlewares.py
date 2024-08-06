@@ -1,11 +1,12 @@
-import config
+import time
 
+import config
 
 from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery, Message, TelegramObject
 from typing import Callable, Dict, Any, Awaitable
 
-from utils.models import *
+from utils.models import Session
 from utils.repositories import UserRepository, SessionRepository
 
 
@@ -33,10 +34,10 @@ class AuthMiddleware(BaseMiddleware):
         return True
 
     async def __call__(
-        self,
-        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-        event: Message | CallbackQuery,
-        data: Dict[str, Any]
+            self,
+            handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+            event: Message | CallbackQuery,
+            data: Dict[str, Any]
     ) -> Any:
         if event.from_user.id in self.users_repo.users:
             if event.from_user.id in self.users_repo.banned_users:

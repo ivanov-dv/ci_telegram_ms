@@ -1,28 +1,22 @@
 import logging
 import sys
 
-
-import pika
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
 import config as cfg
 
-
 from aiogram import Bot, Dispatcher
 
 from handlers import main_handlers
-from utils.db import PostgresDB
 from utils.middlewares import AuthMiddleware
 from utils.repositories import UserRepository, SessionRepository
-
 
 '''
 Repositories
 '''
 users_repo = UserRepository(db=None)
 sessions_repo = SessionRepository(db=None)
-
 
 '''
 RabbitMQ
@@ -62,4 +56,4 @@ dp.message.outer_middleware(outer_middleware)
 dp.callback_query.outer_middleware(outer_middleware)
 dp.include_routers(
     main_handlers.router
-    )
+)

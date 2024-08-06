@@ -4,9 +4,8 @@ from aiogram.fsm.context import FSMContext
 
 import utils.texts as t
 from utils.assist import get_msg_from_state
-from utils.fsm_states import *
-from utils.keyboards import *
-
+from utils.fsm_states import CreateNotice
+from utils.keyboards import CreateNoticeKB, KB
 
 router = Router()
 
@@ -78,10 +77,9 @@ async def cn_ask_period_24h_percent(callback: types.CallbackQuery, state: FSMCon
 @router.callback_query(F.data == 'cn_period_current_price')
 async def cn_ask_period_current_price_percent(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(CreateNotice.get_ticker_name)
-    msg = await callback.message.edit_text(
-        '<b><u>Уведомление сработает при изменении цены в % от текущей цены до указанного значения %.</u></b>\n\n'
-        'Введите процент:',
-        reply_markup=KB.back_to_main())
+    current_price = 1000  # TODO: await get_current_price(data['ticker_name'])
+    msg = await callback.message.edit_text(t.ask_period_current_price_percent(current_price),
+                                           reply_markup=KB.back_to_main())
     await state.update_data({'type_notice': 'period_current_price', 'msg': msg})
     await state.set_state(CreateNotice.get_period_current_price_percent)
 

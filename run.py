@@ -1,6 +1,6 @@
 import asyncio
 
-from engine import *
+from engine import telegram_bot, dp
 
 
 async def main():

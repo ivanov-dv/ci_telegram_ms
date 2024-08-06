@@ -69,9 +69,8 @@ class User(BaseModel):
 class PercentOfPoint(BaseModel):
     target_percent: float
     current_price: float
+    weight: int | None = None
     type_request: str = "percent_of_point"
-
-    model_config = ConfigDict(frozen=True)
 
     def __repr__(self):
         return (
@@ -82,13 +81,15 @@ class PercentOfPoint(BaseModel):
     def __str__(self):
         return self.__repr__()
 
+    def __hash__(self):
+        return hash((self.target_percent, self.current_price, self.weight, self.type_request))
+
 
 class PercentOfTime(BaseModel):
     target_percent: float
     period: Period
+    weight: int | None = None
     type_request: str = "percent_of_time"
-
-    model_config = ConfigDict(frozen=True)
 
     def __repr__(self):
         return (
@@ -99,18 +100,23 @@ class PercentOfTime(BaseModel):
     def __str__(self):
         return self.__repr__()
 
+    def __hash__(self):
+        return hash((self.target_percent, self.period, self.weight, self.type_request))
+
 
 class Price(BaseModel):
     target_price: float
+    weight: int | None = None
     type_request: str = "price"
-
-    model_config = ConfigDict(frozen=True)
 
     def __repr__(self):
         return f'Price(target_price={self.target_price}, weight={self.weight}, type_request="{self.type_request}")'
 
     def __str__(self):
         return self.__repr__()
+
+    def __hash__(self):
+        return hash((self.target_price, self.weight, self.type_request))
 
 
 class UserRequest(BaseModel):
@@ -172,6 +178,11 @@ class UserRequestSchema(BaseModel):
     way: Way
     created: datetime
     updated: datetime
+
+    @classmethod
+    def create(cls, symbol, request_data, way):
+        dt = datetime.utcnow()
+        return cls(symbol=symbol, request_data=request_data, way=way, created=dt, updated=dt)
 
 
 @dataclass
