@@ -15,8 +15,8 @@ from utils.repositories import UserRepository, SessionRepository
 '''
 Repositories
 '''
-users_repo = UserRepository(db=None)
-sessions_repo = SessionRepository(db=None)
+users_repo = UserRepository()
+sessions_repo = SessionRepository()
 
 '''
 RabbitMQ

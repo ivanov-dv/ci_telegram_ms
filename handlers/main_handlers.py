@@ -3,9 +3,11 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 import utils.texts as t
-from utils.assist import get_msg_from_state
+from utils.assist import get_msg_from_state, check_price
 from utils.fsm_states import CreateNotice
 from utils.keyboards import CreateNoticeKB, KB
+from utils.models import UserRequestSchema, Price, Way
+from utils.services import Requests
 
 router = Router()
 
@@ -33,9 +35,11 @@ async def cn_ask_ticker_name(callback: types.CallbackQuery, state: FSMContext):
 async def cn_ask_type_notice(message: types.Message, state: FSMContext):
     await message.delete()
     msg = await get_msg_from_state(state)
-    if msg:
-        await state.update_data({'ticker_name': message.text})
-        await msg.edit_text(t.ask_type_notice(message.text), reply_markup=CreateNoticeKB.type_notice())
+    # tickers = get_tickers()  # TODO
+    tickers = {'BTC', 'ETH'}
+    if message.text.upper() in tickers:
+        await state.update_data({'ticker_name': f'{message.text.upper()}USDT'})
+        await msg.edit_text(t.ask_type_notice(message.text, 'USDT'), reply_markup=CreateNoticeKB.type_notice())
         await state.set_state(CreateNotice.set_type_notice)
     else:
         await msg.edit_text('Такой пары не существует. Попробуйте заново.', reply_markup=CreateNoticeKB.back_to_main())
@@ -77,10 +81,10 @@ async def cn_ask_period_24h_percent(callback: types.CallbackQuery, state: FSMCon
 @router.callback_query(F.data == 'cn_period_current_price')
 async def cn_ask_period_current_price_percent(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(CreateNotice.get_ticker_name)
-    current_price = 1000  # TODO: await get_current_price(data['ticker_name'])
-    msg = await callback.message.edit_text(t.ask_period_current_price_percent(current_price),
+    current_price = 1000.32  # TODO: await get_current_price(data['ticker_name'])
+    msg = await callback.message.edit_text(t.ask_period_current_price_percent(current_price, 'USDT'),
                                            reply_markup=KB.back_to_main())
-    await state.update_data({'type_notice': 'period_current_price', 'msg': msg})
+    await state.update_data({'type_notice': 'period_current_price', 'msg': msg, 'current_price': current_price})
     await state.set_state(CreateNotice.get_period_current_price_percent)
 
 
@@ -100,14 +104,20 @@ async def cn_get_price(message: types.Message, state: FSMContext):
     await message.delete()
     data = await state.get_data()
     msg = await get_msg_from_state(state)
+    price = await check_price(message.text)
+    if not price:
+        await msg.edit_text('Некорректное значение.\n'
+                            'Попробуйте еще раз.',
+                            reply_markup=KB.back_to_main())
     if data['type_notice'] == 'price_up':
-        # Создание запроса
+        user_request = UserRequestSchema.create(data['ticker_name'], Price(target_price=price), Way.up_to)
+        await Requests.add_request(message.from_user.id, user_request)
         await msg.edit_text(
-            f'Создано уведомление\n\n'
+            f'Создано уведомление!\n\n'
             f'Уведомлять при\n'
             f'повышении цены\n'
             f'{data["ticker_name"]}\n'
-            f'до {message.text}',
+            f'до {price}',
             reply_markup=KB.back_to_main())
     if data['type_notice'] == 'price_down':
         # Создание запроса
@@ -120,7 +130,8 @@ async def cn_get_price(message: types.Message, state: FSMContext):
             reply_markup=KB.back_to_main())
     if data['type_notice'] == 'period_point':
         msg = await msg.edit_text(
-            '<b><u>Уведомление сработает при изменении цены в % от указанной цены до указанного значения %.</u></b>\n\n'
+            '<b><u>Уведомление сработает при изменении цены в % '
+            'от указанной цены до указанного значения в %.</u></b>\n\n'
             'Введите процент:',
         )
         await state.update_data({'msg': msg})

@@ -6,7 +6,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery, Message, TelegramObject
 from typing import Callable, Dict, Any, Awaitable
 
-from utils.models import Session
+from utils.models import Session, User
 from utils.repositories import UserRepository, SessionRepository
 
 
@@ -39,13 +39,13 @@ class AuthMiddleware(BaseMiddleware):
             event: Message | CallbackQuery,
             data: Dict[str, Any]
     ) -> Any:
-        if event.from_user.id in self.users_repo.users:
+        if str(event.from_user.id) in self.users_repo.users:
             if event.from_user.id in self.users_repo.banned_users:
                 return await event.answer("Ваш аккаунт заблокирован. Обратитесь в поддержку.")
         else:
-            self.users_repo.add(
-                event.from_user.id
-            )
+            user = User.create(event.from_user.id, event.from_user.first_name,
+                               event.from_user.last_name, event.from_user.username)
+            await self.users_repo.add(user)
         check_session = self.session_middleware(event.from_user.id)
         if not check_session:
             if isinstance(event, Message):

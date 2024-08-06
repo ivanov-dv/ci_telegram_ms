@@ -1,9 +1,11 @@
 import asyncio
 
-from engine import telegram_bot, dp
+from engine import telegram_bot, dp, users_repo
 
 
 async def main():
+    await users_repo.get_all_users_from_db()
+    print(users_repo.users)
     await dp.start_polling(telegram_bot)
     await telegram_bot.delete_webhook(drop_pending_updates=True)
 
