@@ -83,7 +83,7 @@ class Requests:
         if response.status_code not in (200, 307):
             print(response.json())
             response.raise_for_status()
-        return [UserRequest(**res) for res in response.json()]
+        return [UserRequest(**res) for res in response.json()] if response.json() else None
 
     @staticmethod
     async def add_request(user_id: int, request: UserRequestSchema):
@@ -105,15 +105,20 @@ class Requests:
     async def get_current_price(ticker: str):
         return await Requests._send_get(f'{config.REPO_HOST}/price/{ticker}')
 
+    @staticmethod
+    async def get_tickers():
+        return await Requests._send_get(f'{config.REPO_HOST}/tickers')
+
 
 if __name__ == '__main__':
-    user1 = asyncio.run(Requests.get_user(2))
-    print(user1)
-    pprint(asyncio.run(Requests.add_user(user1)))
-    user1.surname = 'test323'
-    pprint(asyncio.run(Requests.update_user(user1)))
-    pprint(asyncio.run(Requests.delete_user(2)))
-    pprint(asyncio.run(Requests.get_user(0)))
-    req = UserRequestSchema.create('BTCUSDT', PercentOfTime(target_percent=30, period=Period.v_24h), Way.up_to)
-    pprint(asyncio.run(Requests.add_request(1, req)))
-    pprint(asyncio.run(Requests.delete_request(1, 1722932008930284032)))
+    pprint(asyncio.run(Requests.get_requests_for_user(5)))
+    # user1 = asyncio.run(Requests.get_user(2))
+    # print(user1)
+    # pprint(asyncio.run(Requests.add_user(user1)))
+    # user1.surname = 'test323'
+    # pprint(asyncio.run(Requests.update_user(user1)))
+    # pprint(asyncio.run(Requests.delete_user(2)))
+    # pprint(asyncio.run(Requests.get_user(0)))
+    # req = UserRequestSchema.create('BTCUSDT', PercentOfTime(target_percent=30, period=Period.v_24h), Way.up_to)
+    # pprint(asyncio.run(Requests.add_request(1, req)))
+    # pprint(asyncio.run(Requests.delete_request(1, 1722932008930284032)))

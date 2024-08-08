@@ -47,3 +47,27 @@ class CreateNoticeKB(KB):
             cls.b_period_point,
             cls.b_back_to_main)
         return builder.adjust(1).as_markup()
+
+
+class MyRequestsKB(KB):
+    b_delete = InlineKeyboardButton(
+        text='Выбрать и удалить', callback_data='mr_delete')
+    b_delete_all = InlineKeyboardButton(
+        text='Удалить все', callback_data='mr_delete_all')
+    b_back_to_my_requests = InlineKeyboardButton(
+        text='В мои уведомления', callback_data='my_notices')
+
+    @classmethod
+    def my_requests(cls):
+        builder = InlineKeyboardBuilder()
+        builder.add(
+            cls.b_delete,
+            cls.b_delete_all,
+            cls.b_back_to_main)
+        return builder.adjust(1).as_markup()
+
+    @classmethod
+    def back_to_my_requests(cls):
+        builder = InlineKeyboardBuilder()
+        builder.add(cls.b_back_to_my_requests)
+        return builder.adjust(1).as_markup()

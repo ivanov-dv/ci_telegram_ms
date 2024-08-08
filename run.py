@@ -1,11 +1,16 @@
 import asyncio
 
-from engine import telegram_bot, dp, users_repo
+from engine import telegram_bot, dp, repo
+from handlers import main_handlers, create_notice, my_requests
 
 
 async def main():
-    await users_repo.get_all_users_from_db()
-    print(users_repo.users)
+    dp.include_routers(
+        main_handlers.router,
+        create_notice.router,
+        my_requests.router,
+    )
+    await repo.get_all_users_from_db()
     await dp.start_polling(telegram_bot)
     await telegram_bot.delete_webhook(drop_pending_updates=True)
 

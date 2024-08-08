@@ -1,3 +1,6 @@
+from utils.models import UserRequest
+
+
 def start(name: str):
     return f"<b><u>Привет, {name}!</u></b>"
 
@@ -20,5 +23,13 @@ def ask_period_current_price_percent(current_price: float | str, currency: str):
             '▶️ <u>Введите процент:</u>')
 
 
-def ask_values():
-    pass
+def show_notices(data: list[UserRequest] | None):
+    if not data:
+        return 'У вас нет уведомлений.'
+    base = '<b><u>Ваши текущие уведомления:\n\n</u></b>'
+    if isinstance(data, list):
+        notices = '\n'.join(
+            [f'{idx}. {notice}\n---------------------------------' for idx, notice in enumerate(data, start=1)]
+        )
+        return f'{base}{notices}'
+    return 'Invalid text.show_notices'

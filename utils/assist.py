@@ -13,3 +13,17 @@ async def check_price(data: str) -> float | None:
     except ValueError:
         return None
 
+
+async def check_percent(data: str) -> float | None:
+    try:
+        return float(data)
+    except ValueError:
+        return None
+
+
+async def check_nums_for_delete(data: str) -> list[int] | None:
+    try:
+        res = list(map(int, data.split()))
+    except ValueError:
+        return None
+    return res

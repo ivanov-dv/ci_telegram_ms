@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 
 class Period(enum.Enum):
@@ -160,7 +160,20 @@ class UserRequest(BaseModel):
         )
 
     def __str__(self):
-        return self.__repr__()
+        text = f"<b><u>{self.symbol}</u></b>\n"
+        if self.request_data.type_request == 'price':
+            if self.way.value == 'up_to':
+                text += f"Цена выше {self.request_data.target_price} USDT."
+            if self.way.value == 'down_to':
+                text += f"Цена ниже {self.request_data.target_price} USDT."
+        if self.request_data.type_request == 'percent_of_time':
+            if self.request_data.period.value == '24h':
+                text += f"Изм цены на {self.request_data.target_percent}% за посл 24ч."
+        if self.request_data.type_request == 'percent_of_point':
+            text += (f"Изм тек цены на {self.request_data.target_percent}% "
+                     f"от цены {self.request_data.current_price} USDT.")
+        return text
+        # return self.__repr__()
 
     @staticmethod
     def create(
