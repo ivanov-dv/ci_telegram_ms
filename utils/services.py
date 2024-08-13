@@ -4,7 +4,7 @@ import httpx
 import asyncio
 
 import config
-from utils.models import User, UserRequest, Way, UserRequestSchema, PercentOfTime, Period
+from utils.models import User, UserRequest, UserRequestSchema
 
 
 class Requests:
@@ -47,6 +47,7 @@ class Requests:
 
     @staticmethod
     async def add_user(user: User) -> User:
+        print(user.json())
         response = await Requests._send_post(f'{config.REPO_HOST}/users/', user.json())
         if response.status_code != 201:
             print(response.json())
@@ -79,11 +80,19 @@ class Requests:
 
     @staticmethod
     async def get_requests_for_user(user_id: int) -> list[UserRequest]:
-        response = await Requests._send_get(f'{config.REPO_HOST}/requests/user/{user_id}')
+        response = await Requests._send_get(f'{config.REPO_HOST}/users/requests/{user_id}')
         if response.status_code not in (200, 307):
             print(response.json())
             response.raise_for_status()
         return [UserRequest(**res) for res in response.json()] if response.json() else None
+
+    @staticmethod
+    async def get_all_users_for_request(request_id: int):
+        response = await Requests._send_get(f"{config.REPO_HOST}/requests/users/{request_id}")
+        if response.status_code not in (200, 307):
+            print(response.json())
+            response.raise_for_status()
+        return [user_id for user_id in response.json()] if response.json() else None
 
     @staticmethod
     async def add_request(user_id: int, request: UserRequestSchema):
@@ -103,15 +112,16 @@ class Requests:
 
     @staticmethod
     async def get_current_price(ticker: str):
-        return await Requests._send_get(f'{config.REPO_HOST}/price/{ticker}')
+        return await Requests._send_get(f'{config.REPO_HOST}/prices/{ticker}')
 
     @staticmethod
     async def get_tickers():
         return await Requests._send_get(f'{config.REPO_HOST}/tickers')
 
 
-if __name__ == '__main__':
-    pprint(asyncio.run(Requests.get_requests_for_user(5)))
+# if __name__ == '__main__':
+    # pprint(asyncio.run(Requests.get_requests_for_user(182199633)))
+    # pprint((asyncio.run(Requests.get_all_users_for_request(1722939704154563840))))
     # user1 = asyncio.run(Requests.get_user(2))
     # print(user1)
     # pprint(asyncio.run(Requests.add_user(user1)))

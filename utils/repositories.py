@@ -38,6 +38,10 @@ class Repository(PatternSingleton):
         return await Requests.get_requests_for_user(user_id)
 
     @staticmethod
+    async def get_users_for_request(request_id: int):
+        return await Requests.get_users_for_request(request_id)
+
+    @staticmethod
     async def delete_request_for_user(user_id: int, request_id: int):
         await Requests.delete_request(user_id, request_id)
 
