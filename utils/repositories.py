@@ -1,4 +1,7 @@
+import asyncio
 import time
+
+import httpx
 
 from utils.models import Session, User
 from utils.patterns import PatternSingleton
@@ -8,6 +11,7 @@ from utils.services import Requests
 class Repository(PatternSingleton):
     users: set[str] = set()
     banned_users: set[str] = set()
+    tickers: set[str] = set()
 
     async def add_user(self, user: User) -> User:
         res = await Requests.add_user(user)
@@ -53,9 +57,17 @@ class Repository(PatternSingleton):
         for req in user_requests:
             await Requests.delete_request(user_id, req.request_id)
 
-    @staticmethod
-    async def get_tickers() -> tuple:
-        return await Requests.get_tickers()
+    async def get_tickers(self) -> None:
+        while True:
+            try:
+                res = await Requests.get_tickers()
+            except httpx.ConnectError:
+                print('Ошибка получения списка торговых пар')
+                await asyncio.sleep(10)
+            else:
+                self.tickers = set(res)
+                print('Список пар обновлен')
+                await asyncio.sleep(86400)
 
     @staticmethod
     async def get_current_price(ticker: str) -> float:

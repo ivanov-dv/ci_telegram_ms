@@ -1,13 +1,14 @@
+import httpx
 from aiogram import types, F, Router
 from aiogram.fsm.context import FSMContext
 
+from engine import repo
 from utils import texts as t
 from utils.assist import get_msg_from_state, check_price, check_percent
 from utils.fsm_states import CreateRequestFSM
 from utils.keyboards import CreateNoticeKB, KB
 from utils.models import UserRequestSchema, Price, Way, PercentOfPoint, PercentOfTime, Period
 from utils.services import Requests
-
 
 router = Router()
 
@@ -16,9 +17,9 @@ router = Router()
 async def cn_ask_type_notice(message: types.Message, state: FSMContext):
     await message.delete()
     msg = await get_msg_from_state(state)
-    # tickers = get_tickers()  # TODO
-    tickers = {'BTC', 'ETH'}
-    if message.text.upper() in tickers:
+    if not repo.tickers:
+        await msg.edit_text('Сервис временно недоступен', reply_markup=KB.main())
+    elif (message.text.upper() + 'USDT') in repo.tickers:
         await state.update_data({'ticker_name': f'{message.text.upper()}USDT'})
         await msg.edit_text(t.ask_type_notice(message.text, 'USDT'), reply_markup=CreateNoticeKB.type_notice())
         await state.set_state(CreateRequestFSM.set_type_request)
@@ -62,11 +63,16 @@ async def cn_ask_period_24h_percent(callback: types.CallbackQuery, state: FSMCon
 @router.callback_query(F.data == 'cn_period_current_price')
 async def cn_ask_period_current_price_percent(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(CreateRequestFSM.get_ticker_name)
-    current_price = 1000.32  # TODO: await get_current_price(data['ticker_name'])
-    msg = await callback.message.edit_text(t.ask_period_current_price_percent(current_price, 'USDT'),
-                                           reply_markup=KB.back_to_main())
-    await state.update_data({'type_notice': 'period_current_price', 'msg': msg, 'current_price': current_price})
-    await state.set_state(CreateRequestFSM.get_period_current_price_percent)
+    data = await state.get_data()
+    try:
+        current_price = await repo.get_current_price(data['ticker_name'])
+    except httpx.ConnectError:
+        await callback.message.edit_text('Сервис временно недоступен', reply_markup=KB.main())
+    else:
+        msg = await callback.message.edit_text(t.ask_period_current_price_percent(current_price, 'USDT'),
+                                               reply_markup=KB.back_to_main())
+        await state.update_data({'type_notice': 'period_current_price', 'msg': msg, 'current_price': current_price})
+        await state.set_state(CreateRequestFSM.get_period_current_price_percent)
 
 
 @router.callback_query(F.data == 'cn_period_point')

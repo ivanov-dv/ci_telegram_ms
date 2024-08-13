@@ -1,5 +1,7 @@
 import time
 
+import httpx
+
 import config
 
 from aiogram import BaseMiddleware
@@ -46,7 +48,11 @@ class AuthMiddleware(BaseMiddleware):
         else:
             user = User.create(event.from_user.id, event.from_user.first_name,
                                event.from_user.last_name, event.from_user.username)
-            await self.users_repo.add_user(user)
+            try:
+                await self.users_repo.add_user(user)
+            except httpx.ConnectError:
+                return await event.message.edit_text("Сервис временно недоступен.",
+                                                     reply_markup=KB.main())
         check_session = await self.session_middleware(event.from_user.id)
         if not check_session:
             if isinstance(event, Message):

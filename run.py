@@ -15,6 +15,7 @@ async def main():
         await repo.get_all_users_from_db()
     except Exception as e:
         logging.error(f'Error getting users from database: {e}')
+    asyncio.create_task(repo.get_tickers())
     await dp.start_polling(telegram_bot)
     await telegram_bot.delete_webhook(drop_pending_updates=True)
 

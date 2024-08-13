@@ -42,7 +42,6 @@ class Requests:
 
     @staticmethod
     async def add_user(user: User) -> User:
-        print(user.json())
         response = await Requests._send_post(f'{config.REPO_HOST}/users/', user.json())
         if response.status_code != 201:
             response.raise_for_status()
@@ -99,11 +98,13 @@ class Requests:
 
     @staticmethod
     async def get_current_price(ticker: str):
-        return await Requests._send_get(f'{config.REPO_HOST}/prices/{ticker}')
+        response = await Requests._send_get(f'{config.BINANCE_HOST}/prices/{ticker}')
+        return response.json()
 
     @staticmethod
     async def get_tickers():
-        return await Requests._send_get(f'{config.REPO_HOST}/tickers')
+        response = await Requests._send_get(f'{config.BINANCE_HOST}/tickers')
+        return response.json()
 
 
 # if __name__ == '__main__':
