@@ -34,12 +34,12 @@ class Repository(PatternSingleton):
         self.users = set(users.keys())
 
     @staticmethod
-    async def get_requests_for_user(user_id: int):
-        return await Requests.get_requests_for_user(user_id)
+    async def get_all_requests_for_user(user_id: int):
+        return await Requests.get_all_requests_for_user(user_id)
 
     @staticmethod
-    async def get_users_for_request(request_id: int):
-        return await Requests.get_users_for_request(request_id)
+    async def get_all_users_for_request(request_id: int):
+        return await Requests.get_all_users_for_request(request_id)
 
     @staticmethod
     async def delete_request_for_user(user_id: int, request_id: int):
@@ -47,7 +47,7 @@ class Repository(PatternSingleton):
 
     @staticmethod
     async def delete_all_requests_for_user(user_id: int) -> None:
-        user_requests = await Requests.get_requests_for_user(user_id)
+        user_requests = await Requests.get_all_requests_for_user(user_id)
         if not user_requests:
             return
         for req in user_requests:
