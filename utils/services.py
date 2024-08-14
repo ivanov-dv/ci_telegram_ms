@@ -105,18 +105,3 @@ class Requests:
     async def get_tickers():
         response = await Requests._send_get(f'{config.BINANCE_HOST}/tickers')
         return response.json()
-
-
-# if __name__ == '__main__':
-    # pprint(asyncio.run(Requests.get_requests_for_user(182199633)))
-    # pprint((asyncio.run(Requests.get_all_users_for_request(1722939704154563840))))
-    # user1 = asyncio.run(Requests.get_user(2))
-    # print(user1)
-    # pprint(asyncio.run(Requests.add_user(user1)))
-    # user1.surname = 'test323'
-    # pprint(asyncio.run(Requests.update_user(user1)))
-    # pprint(asyncio.run(Requests.delete_user(2)))
-    # pprint(asyncio.run(Requests.get_user(0)))
-    # req = UserRequestSchema.create('BTCUSDT', PercentOfTime(target_percent=30, period=Period.v_24h), Way.up_to)
-    # pprint(asyncio.run(Requests.add_request(1, req)))
-    # pprint(asyncio.run(Requests.delete_request(1, 1722932008930284032)))

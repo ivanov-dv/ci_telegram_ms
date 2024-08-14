@@ -170,7 +170,7 @@ class UserRequest(BaseModel):
             if self.request_data.period.value == '24h':
                 text += f"Изм цены на {self.request_data.target_percent}% за посл 24ч."
         if self.request_data.type_request == 'percent_of_point':
-            text += (f"Изм тек цены на {self.request_data.target_percent}% "
+            text += (f"Изм цены на {self.request_data.target_percent}% "
                      f"от цены {self.request_data.current_price} USDT.")
         return text
         # return self.__repr__()

@@ -1,6 +1,7 @@
 import time
 
 import httpx
+from httpx import HTTPStatusError
 
 import config
 
@@ -50,7 +51,7 @@ class AuthMiddleware(BaseMiddleware):
                                event.from_user.last_name, event.from_user.username)
             try:
                 await self.users_repo.add_user(user)
-            except httpx.ConnectError:
+            except (httpx.ConnectError, HTTPStatusError):
                 return await event.message.edit_text("Сервис временно недоступен.",
                                                      reply_markup=KB.main())
         check_session = await self.session_middleware(event.from_user.id)

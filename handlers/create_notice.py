@@ -69,10 +69,13 @@ async def cn_ask_period_current_price_percent(callback: types.CallbackQuery, sta
     except httpx.ConnectError:
         await callback.message.edit_text('Сервис временно недоступен', reply_markup=KB.main())
     else:
-        msg = await callback.message.edit_text(t.ask_period_current_price_percent(current_price, 'USDT'),
-                                               reply_markup=KB.back_to_main())
-        await state.update_data({'type_notice': 'period_current_price', 'msg': msg, 'current_price': current_price})
-        await state.set_state(CreateRequestFSM.get_period_current_price_percent)
+        if isinstance(current_price, str):
+            await callback.message.edit_text(f'{current_price}', reply_markup=KB.main())
+        else:
+            msg = await callback.message.edit_text(t.ask_period_current_price_percent(current_price, 'USDT'),
+                                                   reply_markup=KB.back_to_main())
+            await state.update_data({'type_notice': 'period_current_price', 'msg': msg, 'current_price': current_price})
+            await state.set_state(CreateRequestFSM.get_period_current_price_percent)
 
 
 @router.callback_query(F.data == 'cn_period_point')

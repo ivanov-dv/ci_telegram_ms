@@ -4,11 +4,10 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 import utils.texts as t
-
 from engine import repo
+
 from utils.fsm_states import CreateRequestFSM
 from utils.keyboards import KB, MyRequestsKB
-
 
 router = Router()
 
@@ -43,3 +42,8 @@ async def mr_show_requests(callback: types.CallbackQuery, state: FSMContext):
     else:
         await state.update_data({'user_requests': user_requests})
         await callback.message.edit_text(t.show_notices(user_requests), reply_markup=MyRequestsKB.my_requests())
+
+
+@router.callback_query(F.data == 'remove_notice')
+async def remove_notice(callback: types.CallbackQuery):
+    await callback.message.delete()

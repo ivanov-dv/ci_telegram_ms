@@ -38,6 +38,10 @@ class Repository(PatternSingleton):
         self.users = set(users.keys())
 
     @staticmethod
+    async def get_request(request_id: int):
+        return await Requests.get_request(request_id)
+
+    @staticmethod
     async def get_all_requests_for_user(user_id: int):
         return await Requests.get_all_requests_for_user(user_id)
 
