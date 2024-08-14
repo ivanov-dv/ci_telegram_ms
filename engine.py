@@ -1,13 +1,12 @@
-import asyncio
 import logging
 import sys
 
+from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
-import config as cfg
 
-from aiogram import Bot, Dispatcher
+import config as cfg
 
 from utils.middlewares import AuthMiddleware
 from utils.rabbitmq import RabbitMq

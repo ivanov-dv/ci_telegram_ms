@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import time
 
 import httpx
@@ -65,17 +66,28 @@ class Repository(PatternSingleton):
         while True:
             try:
                 res = await Requests.get_tickers()
-            except httpx.ConnectError:
-                print('Ошибка получения списка торговых пар')
+            except httpx.ConnectError as e:
+                logging.error(f'Ошибка получения списка торговых пар: {e}')
                 await asyncio.sleep(10)
             else:
                 self.tickers = set(res)
-                print('Список пар обновлен')
+                logging.info('Список пар обновлен')
                 await asyncio.sleep(86400)
 
     @staticmethod
     async def get_current_price(ticker: str) -> float:
         return await Requests.get_current_price(ticker)
+
+    async def load_users_from_db(self):
+        while True:
+            try:
+                await self.get_all_users_from_db()
+            except Exception as e:
+                logging.error(f'Ошибка получения пользователей из удаленного репозитория: {e}')
+                await asyncio.sleep(10)
+            else:
+                logging.info('Пользователи загружены из удаленного репозитория.')
+                break
 
 
 class SessionRepository(PatternSingleton):
