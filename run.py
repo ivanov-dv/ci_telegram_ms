@@ -15,6 +15,7 @@ async def main_bot():
 
 
 async def main():
+    await asyncio.sleep(10)
     await asyncio.gather(
         main_bot(),
         repo.get_tickers(),
