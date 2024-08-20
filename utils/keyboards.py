@@ -1,5 +1,5 @@
 from aiogram.types import InlineKeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder, KeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
 class GeneratorKB:
