@@ -57,7 +57,8 @@ class AuthMiddleware(BaseMiddleware):
         check_session = await self.session_middleware(event.from_user.id)
         if not check_session:
             if isinstance(event, Message):
-                return await event.answer("Ваша сессия истекла, начните заново.")
+                await event.delete()
+                return await event.answer("Ваша сессия истекла, начните заново.", reply_markup=KB.remove_notice())
             if isinstance(event, CallbackQuery):
                 return await event.message.edit_text("Ваша сессия истекла, начните заново.",
                                                      reply_markup=KB.back_to_main())
