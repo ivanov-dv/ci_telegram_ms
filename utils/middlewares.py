@@ -30,7 +30,6 @@ class AuthMiddleware(BaseMiddleware):
     async def session_middleware(self, user_id):
         if user_id in self.sessions_repo.sessions:
             if await self._check_timeout_session(user_id):
-                await self.sessions_repo.update(user_id)
                 return False
             await self.sessions_repo.update(user_id)
         else:
@@ -57,7 +56,8 @@ class AuthMiddleware(BaseMiddleware):
         check_session = await self.session_middleware(event.from_user.id)
         if not check_session:
             if isinstance(event, Message):
-                return await event.answer("Ваша сессия истекла, начните заново.")
+                await event.delete()
+                return await event.answer("Ваша сессия истекла, начните заново.", reply_markup=KB.remove_notice())
             if isinstance(event, CallbackQuery):
                 return await event.message.edit_text("Ваша сессия истекла, начните заново.",
                                                      reply_markup=KB.back_to_main())

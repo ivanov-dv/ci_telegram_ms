@@ -2,7 +2,7 @@ import httpx
 from aiogram import types, F, Router
 from aiogram.fsm.context import FSMContext
 
-from engine import repo
+from engine import repo, middleware
 from utils import texts as t
 from utils.assist import get_msg_from_state, check_price, check_percent
 from utils.fsm_states import CreateRequestFSM
@@ -11,6 +11,8 @@ from utils.models import UserRequestSchema, Price, Way, PercentOfPoint, PercentO
 from utils.services import Requests
 
 router = Router()
+router.message.middleware(middleware)
+router.callback_query.middleware(middleware)
 
 
 @router.message(CreateRequestFSM.get_ticker_name)

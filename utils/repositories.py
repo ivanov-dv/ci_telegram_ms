@@ -4,6 +4,7 @@ import time
 
 import httpx
 
+import config
 from utils.models import Session, User
 from utils.patterns import PatternSingleton
 from utils.services import Requests
@@ -105,3 +106,7 @@ class SessionRepository(PatternSingleton):
 
     async def update(self, user_id) -> None:
         self.sessions[user_id].time_update = time.time()
+
+    async def check(self, user_id) -> bool:
+        session = self.sessions.get(user_id, None)
+        return True if session and time.time() - session.time_update <= config.MAX_SESSION_TIME_SECS else False

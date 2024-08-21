@@ -25,9 +25,7 @@ Telegram API
 telegram_bot = Bot(token=cfg.TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode=cfg.TELEGRAM_PARSE_MODE))
 logging.basicConfig(level=cfg.LOG_LEVEL, stream=sys.stdout)
 dp = Dispatcher(storage=MemoryStorage())
-outer_middleware = AuthMiddleware(repo, sessions_repo)
-dp.message.outer_middleware(outer_middleware)
-dp.callback_query.outer_middleware(outer_middleware)
+middleware = AuthMiddleware(repo, sessions_repo)
 
 
 '''

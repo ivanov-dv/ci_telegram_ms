@@ -7,10 +7,10 @@ from aiogram.fsm.context import FSMContext
 
 import utils.texts as t
 
-from engine import repo
+from engine import repo, sessions_repo
 from utils.fsm_states import CreateRequestFSM
 from utils.keyboards import KB, MyRequestsKB
-
+from utils.models import Session
 
 router = Router()
 
@@ -29,6 +29,8 @@ async def start_callback(callback: types.CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == 'create_notice')
 async def cn_ask_ticker_name(callback: types.CallbackQuery, state: FSMContext):
+    if not await sessions_repo.check(callback.from_user.id):
+        await sessions_repo.add(Session(callback.from_user.id))
     await state.clear()
     await state.set_state(CreateRequestFSM.get_ticker_name)
     msg = await callback.message.edit_text(t.ask_ticker(), reply_markup=KB.back_to_main())
