@@ -13,8 +13,9 @@ def ask_ticker():
             '▶️ <u>Введите название:</u>')
 
 
-def ask_type_notice(ticker: str, pair: str):
+def ask_type_notice(ticker: str, pair: str, current_price: float):
     return (f'<b><u>Мониторинг пары {ticker.upper()}{pair.upper()}</u></b>\n\n'
+            f'Текущая цена: {current_price}\n\n'
             f'▶️ <b><u>Выберите тип уведомления:</u></b>')
 
 

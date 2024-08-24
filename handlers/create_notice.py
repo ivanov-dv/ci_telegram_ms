@@ -22,8 +22,10 @@ async def cn_ask_type_notice(message: types.Message, state: FSMContext):
     if not repo.tickers:
         await msg.edit_text('Сервис временно недоступен', reply_markup=KB.main())
     elif (message.text.upper() + 'USDT') in repo.tickers:
+        current_price = await repo.get_current_price(message.text.upper() + 'USDT')
         await state.update_data({'ticker_name': f'{message.text.upper()}USDT'})
-        await msg.edit_text(t.ask_type_notice(message.text, 'USDT'), reply_markup=CreateNoticeKB.type_notice())
+        await msg.edit_text(t.ask_type_notice(message.text, 'USDT', current_price),
+                            reply_markup=CreateNoticeKB.type_notice())
         await state.set_state(CreateRequestFSM.set_type_request)
     else:
         await msg.edit_text('Такой пары не существует. Попробуйте заново.', reply_markup=KB.back_to_main())
