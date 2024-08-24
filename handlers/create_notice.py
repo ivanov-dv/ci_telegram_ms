@@ -31,9 +31,11 @@ async def cn_ask_type_notice(message: types.Message, state: FSMContext):
 
 @router.callback_query(F.data == 'cn_price_up')
 async def cn_ask_price_up(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
     await state.set_state(CreateRequestFSM.get_ticker_name)
     msg = await callback.message.edit_text(
         '<b><u>Уведомление сработает при повышении цены до указанного значения.</u></b>\n\n'
+        f'Текущая цена: {repo.get_current_price(data["ticker_name"])}\n\n'
         'Введите цену:',
         reply_markup=KB.back_to_main())
     await state.update_data({'type_notice': 'price_up', 'msg': msg})
@@ -42,9 +44,11 @@ async def cn_ask_price_up(callback: types.CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == 'cn_price_down')
 async def cn_ask_price_down(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
     await state.set_state(CreateRequestFSM.get_ticker_name)
     msg = await callback.message.edit_text(
         '<b><u>Уведомление сработает при снижении цены до указанного значения.</u></b>\n\n'
+        f'Текущая цена: {repo.get_current_price(data["ticker_name"])}\n\n'
         'Введите цену:',
         reply_markup=KB.back_to_main())
     await state.update_data({'type_notice': 'price_down', 'msg': msg})
@@ -53,9 +57,11 @@ async def cn_ask_price_down(callback: types.CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == 'cn_period_24h')
 async def cn_ask_period_24h_percent(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
     await state.set_state(CreateRequestFSM.get_ticker_name)
     msg = await callback.message.edit_text(
         '<b><u>Уведомление сработает при изменении цены в % за последние 24 часа до указанного значения %.</u></b>\n\n'
+        f'Текущая цена: {repo.get_current_price(data["ticker_name"])}\n\n'
         'Введите процент:',
         reply_markup=KB.back_to_main())
     await state.update_data({'type_notice': 'period_24h', 'msg': msg})
