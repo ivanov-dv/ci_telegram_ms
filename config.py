@@ -36,3 +36,8 @@ MICROSERVICES_HOSTS
 '''
 REPO_HOST = os.getenv('REPO_HOST')
 BINANCE_HOST = os.getenv('BINANCE_HOST')
+
+'''
+SENTRY
+'''
+SENTRY_DSN = os.getenv('SENTRY_DSN')

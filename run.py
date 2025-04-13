@@ -1,5 +1,8 @@
 import asyncio
 
+import sentry_sdk
+
+from config import SENTRY_DSN
 from engine import telegram_bot, dp, repo, rabbit
 from handlers import main_handlers, create_notice, my_requests
 
@@ -25,4 +28,6 @@ async def main():
 
 
 if __name__ == "__main__":
+    if SENTRY_DSN:
+        sentry_sdk.init(SENTRY_DSN)
     asyncio.run(main())
