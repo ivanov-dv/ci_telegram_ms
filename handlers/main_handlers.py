@@ -46,7 +46,10 @@ async def mr_show_requests(callback: types.CallbackQuery, state: FSMContext):
         await callback.message.edit_text('Сервис временно недоступен.', reply_markup=KB.main())
     else:
         await state.update_data({'user_requests': user_requests})
-        await callback.message.edit_text(t.show_notices(user_requests), reply_markup=MyRequestsKB.my_requests())
+        await callback.message.edit_text(
+            t.show_notices(sorted(user_requests, key=lambda n: n.symbol)),
+            reply_markup=MyRequestsKB.my_requests()
+        )
 
 
 @router.callback_query(F.data == 'remove_notice')
